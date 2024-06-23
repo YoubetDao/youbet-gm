@@ -1,17 +1,143 @@
-import React, { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Alarm from './alarm';
+import Menu from './menu';
+import { AlarmStatus } from '@/type';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Cross2Icon } from '@radix-ui/react-icons';
+import { Separator } from '../ui/separator';
+
+const alarmData = [
+    {
+        id: 1,
+        month: 6,
+        date: 23,
+        dayOfWeek: "Thursday",
+        hour: 7,
+        minute: 30,
+        status: AlarmStatus.InProgress // 正在进行
+    },
+    {
+        id: 2,
+        month: 12,
+        date: 31,
+        dayOfWeek: "Saturday",
+        hour: 23,
+        minute: 9,
+        status: AlarmStatus.Pending // 待执行
+    },
+    {
+        id: 3,
+        month: 3,
+        date: 15,
+        dayOfWeek: "Tuesday",
+        hour: 12,
+        minute: 0,
+        status: AlarmStatus.Completed // 已完成
+    },
+    {
+        id: 4,
+        month: 6,
+        date: 23,
+        dayOfWeek: "Thursday",
+        hour: 7,
+        minute: 30,
+        status: AlarmStatus.InProgress // 正在进行
+    },
+    {
+        id: 5,
+        month: 12,
+        date: 31,
+        dayOfWeek: "Saturday",
+        hour: 23,
+        minute: 9,
+        status: AlarmStatus.Pending // 待执行
+    }
+];
+
+interface MenuStatus {
+    status: 'none' | 'menu1' | 'menu2'; // 定义状态为 'none'、'menu1' 或 'menu2'
+}
 
 function Main() {
+    const alarmRef = useRef(null);
+    const [menuStatus, setMenuStatus] = useState<MenuStatus>({ status: 'none' });
+    // 示例：更新菜单状态的函数
+    const updateMenuStatus = (newStatus: 'none' | 'menu1' | 'menu2') => {
+        console.log(newStatus)
+        setMenuStatus({ status: newStatus });
+    };
     useEffect(() => {
         new Clock();
+        // localStorage.getItem(clock)
     }, []);
     return (
-        <div id="container" className="flex min-h-screen items-center justify-center">
-            <canvas id="canvas" className='w-full h-full'></canvas>
-        </div>
+        <>
+            <Menu onMenuClick={updateMenuStatus} cur={menuStatus.status} />
+            <div className="flex-grow grid grid-cols-4 max-h-screen w-full overflow-hidden">
+                <div className='col-span-3 w-full max-h-screen place-content-center'>
+                    <canvas id="canvas" className='aspect-auto w-full max-h-screen'></canvas>
+                </div>
+                <div ref={alarmRef} className='col-span-1 flex flex-col gap-5 bg-slate-900 min-h-screen w-full overflow-y-auto items-center'>
+                    <div className='w-full'>
+                        {alarmData.map((alarm) => (
+                            <Alarm key={alarm.id} {...alarm} />
+                        ))}
+                    </div>
+                    <Dialog.Root>
+                        <Dialog.Trigger asChild>
+                            <button
+                                className="group cursor-pointer outline-none hover:rotate-90 duration-300"
+                                title="Add New"
+                            >
+                                <svg
+                                    className="stroke-teal-500 fill-none group-hover:fill-teal-800 group-active:stroke-teal-200 group-active:fill-teal-600 group-active:duration-0 duration-300"
+                                    viewBox="0 0 24 24"
+                                    height="50px"
+                                    width="50px"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        stroke-width="1.5"
+                                        d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                                    ></path>
+                                    <path stroke-width="1.5" d="M8 12H16"></path>
+                                    <path stroke-width="1.5" d="M12 16V8"></path>
+                                </svg>
+                            </button>
+                        </Dialog.Trigger>
+                        <Dialog.Portal>
+                            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-30" />
+                            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded shadow-lg w-96">
+                                <Dialog.Title className="text-lg font-medium">Modal Title</Dialog.Title>
+                                <Dialog.Description className="mt-2 mb-4 text-sm text-gray-500">
+                                    This is the content of the modal.
+                                </Dialog.Description>
+                                <button
+                                    className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700"
+                                    onClick={() => Dialog.Close}
+                                >
+                                    Close
+                                </button>
+                                <Dialog.Close asChild>
+                                    <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                                        <Cross2Icon />
+                                    </button>
+                                </Dialog.Close>
+                            </Dialog.Content>
+                        </Dialog.Portal>
+                    </Dialog.Root>
+
+                </div>
+
+            </div>
+
+        </>
+
     )
 }
 
 export default Main
+
 
 class Clock {
     canvas: HTMLCanvasElement;
@@ -45,6 +171,7 @@ class Clock {
         this.initText();
         this.startTime();
     }
+
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         for (let i in this.rings) {
@@ -95,6 +222,7 @@ class Clock {
             this.ctx.clearRect(0, 0, width, height);
         }
     }
+
     initClock() {
         let now = this.currentClock();
         {/* @ts-ignore */ }
@@ -138,6 +266,7 @@ class Clock {
         requestAnimationFrame(() => this.animate());
         this.draw();
     }
+
     currentClock() {
         const d = new Date();
         return ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2);
@@ -159,7 +288,7 @@ class Ring {
         this.x = w / 2;
         this.y = h / 2;
         this.deg = Math.random() * Math.PI * 2;
-        this.r = (2 * Math.min(h, w)) / 5 + Math.random() * 10 | 0;
+        this.r = (49 * Math.min(h, w)) / 100 + Math.random() * 10 | 0;
         this.vd = Math.random() * Math.PI * 2 / 360 + 0.01;
         this.color = `hsl(${Math.random() * 360 | 0}, 80%, 50%)`;
         this.dx = this.r * Math.cos(this.deg) + this.x;

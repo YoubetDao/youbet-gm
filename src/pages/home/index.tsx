@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet'
-import Main from '@/components/home/main'
+import Main from '@/components/home/home'
 
 export default function Home() {
   return (
